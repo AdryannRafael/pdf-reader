@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.adinhop.animeprocessador'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    // https://mvnrepository.com/artifact/org.apache.poi/poi-ooxml
+    implementation 'org.apache.poi:poi-ooxml:5.4.1'
+    // https://mvnrepository.com/artifact/com.itextpdf/itextpdf
+    implementation 'com.itextpdf:itextpdf:5.5.13.4'
+    implementation 'org.docx4j:docx4j-core:11.5.4'
+    implementation 'org.docx4j:docx4j-JAXB-ReferenceImpl:11.5.4'
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.0'
+    implementation 'org.slf4j:slf4j-simple:2.0.9'
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+}
+
+test {
+    useJUnitPlatform()
+}
