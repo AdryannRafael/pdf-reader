@@ -1,4 +1,4 @@
-package com.adinhop.animeprocessador;
+package com.adinho.pdf_reader.pdf_reader;
 
 import java.math.BigDecimal;
 

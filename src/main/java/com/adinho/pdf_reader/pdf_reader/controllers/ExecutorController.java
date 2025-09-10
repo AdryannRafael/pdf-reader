@@ -1,7 +1,7 @@
-package com.adinhop.animeprocessador.controllers;
+package com.adinho.pdf_reader.pdf_reader.controllers;
 
-import com.adinhop.animeprocessador.Calculos;
-import com.adinhop.animeprocessador.ExtracaoCalulos;
+import com.adinho.pdf_reader.pdf_reader.Calculos;
+import com.adinho.pdf_reader.pdf_reader.ExtracaoCalulos;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

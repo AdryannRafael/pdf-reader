@@ -1,4 +1,4 @@
-package com.adinhop.animeprocessador;
+package com.adinho.pdf_reader.pdf_reader;
 
 import jakarta.xml.bind.JAXBElement;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
