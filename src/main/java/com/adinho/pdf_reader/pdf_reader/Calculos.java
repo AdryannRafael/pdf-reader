@@ -4,6 +4,7 @@ import jakarta.xml.bind.JAXBElement;
 import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 import org.docx4j.wml.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -15,18 +16,16 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class Calculos {
-    private final Path arquivo;
     private static final List<String> keys = List.of("Selic", "Juros");
     private static final Pattern pattern = Pattern.compile("(%s)".formatted(String.join("|", keys)));
 
-    public Calculos(Path arquivo) {
-        this.arquivo = arquivo;
+    public Calculos() {
+
     }
 
 
-    public ExtracaoCalulos procurar(WordprocessingMLPackage wordMLPackage) {
+    public static ExtracaoCalulos procurar(WordprocessingMLPackage wordMLPackage) {
         MainDocumentPart documentPart = wordMLPackage.getMainDocumentPart();
-
 
         List<JAXBElement> content = documentPart.getContent()
                 .stream()
@@ -34,34 +33,27 @@ public class Calculos {
                 .map(col -> (JAXBElement) col)
                 .toList();
 
-        /*8 - 9 - 10 - 11
-         * 7 - 8 - 9 - 10*/
+//        linhas
+        /*3 - 4 - 8 - 9 - 10 - 11
+         *2 - 3 - 7 - 8 - 9 - 10*/
         Tbl tabela = (Tbl) content.get(0).getValue();
+        Tr linhaNome = (Tr) tabela.getContent().get(2);
+        Tr linhaCpf = (Tr) tabela.getContent().get(3);
         Tr linhaPrincipal = (Tr) tabela.getContent().get(7);
         Tr linhaJuros = (Tr) tabela.getContent().get(8);
         Tr linhaSelic = (Tr) tabela.getContent().get(9);
         Tr linhaTotal = (Tr) tabela.getContent().get(10);
-        List<Tr> colunasComAsInfoQueQuero = List.of(linhaPrincipal, linhaJuros, linhaSelic, linhaTotal);
+        List<Tr> colunasComAsInfoQueQuero = List.of(linhaNome, linhaCpf, linhaPrincipal, linhaJuros, linhaSelic, linhaTotal);
         List<String> values = colunasComAsInfoQueQuero.stream().map(el -> {
-                    JAXBElement cordenada = (JAXBElement) el.getContent().get(7);
-                    Tc colContent = (Tc) cordenada.getValue();
-                    if (!colContent.getContent().isEmpty()) {
-                        P paragrafo = (P) colContent.getContent().get(0);
-                        if (!paragrafo.getContent().isEmpty()) {
-                            R r = (R) paragrafo.getContent().get(0);
-                            if (!r.getContent().isEmpty()) {
-                                JAXBElement elDentroLinha = (JAXBElement) r.getContent().get(0);
-                                if (Text.class.isAssignableFrom(elDentroLinha.getValue().getClass())) {
-                                    Text t = (Text) elDentroLinha.getValue();
-                                    return t.getValue();
-                                }
-                                return null;
-                            }
-                            return null;
-                        }
-                        return null;
+                    JAXBElement cordenada;
+                    if (el == linhaNome || el == linhaCpf) {
+                        cordenada = (JAXBElement) el.getContent().get(1);
+                        return extrairValorDaCordenadaString(cordenada);
+                    } else {
+                        cordenada = (JAXBElement) el.getContent().get(7);
+                        return extrairValorDaCordenadaNumero(cordenada);
                     }
-                    return null;
+
                 })
                 .toList();
 
@@ -70,19 +62,60 @@ public class Calculos {
             throw new RuntimeException("Nao foi possivel encontrar os valores no documento.");
         }
 
-        BigDecimal principal = convertTOBigDecimal(values.get(0).trim());
-        BigDecimal juros = convertTOBigDecimal(values.get(1).trim());
-        BigDecimal selic = convertTOBigDecimal(values.get(2).trim());
-        BigDecimal total = convertTOBigDecimal(values.get(3).trim());
+        String nome = values.get(0).trim();
+        String cpf = values.get(1).trim();
+        BigDecimal principal = convertTOBigDecimal(values.get(2).trim());
+        BigDecimal juros = convertTOBigDecimal(values.get(3).trim());
+        BigDecimal selic = convertTOBigDecimal(values.get(4).trim());
+        BigDecimal total = convertTOBigDecimal(values.get(5).trim());
 
-        return new ExtracaoCalulos(principal, juros, selic, total);
+        return new ExtracaoCalulos(nome, cpf, principal, juros, selic, total);
     }
 
-    public ExtracaoCalulos extrair() {
+    private static String extrairValorDaCordenadaNumero(JAXBElement cordenada){
+        Tc colContent = (Tc) cordenada.getValue();
+        if (!colContent.getContent().isEmpty()) {
+            P paragrafo = (P) colContent.getContent().get(0);
+            if (!paragrafo.getContent().isEmpty()) {
+                R r = (R) paragrafo.getContent().get(0);
+                if (!r.getContent().isEmpty()) {
+                    JAXBElement elDentroLinha = (JAXBElement) r.getContent().get(0);
+                    if (Text.class.isAssignableFrom(elDentroLinha.getValue().getClass())) {
+                        Text t = (Text) elDentroLinha.getValue();
+                        return t.getValue();
+                    }
+                    return null;
+                }
+                return null;
+            }
+            return null;
+        }
+        return null;
+    }
+    private static String extrairValorDaCordenadaString(JAXBElement cordenada){
+        Tc colContent = (Tc) cordenada.getValue();
+        if (!colContent.getContent().isEmpty()) {
+            P paragrafo = (P) colContent.getContent().get(0);
+            String rsidRPr = paragrafo.toString();
+            return rsidRPr;
+        }
+        return null;
+    }
+    public static ExtracaoCalulos extrair(Path arquivo) {
         try {
-            File docxFile = this.arquivo.toFile();
+            File docxFile = arquivo.toFile();
             WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(docxFile);
-            return this.procurar(wordMLPackage);
+            return procurar(wordMLPackage);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Deu merda na extração dos dados", e);
+        }
+    }
+
+    public static ExtracaoCalulos extrair(MultipartFile file) {
+        try {
+            WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(file.getInputStream());
+            return procurar(wordMLPackage);
 
         } catch (Exception e) {
             throw new RuntimeException("Deu merda na extração dos dados", e);
@@ -104,7 +137,7 @@ public class Calculos {
         return texts;
     }
 
-    private BigDecimal convertTOBigDecimal(String valor) {
+    private static BigDecimal convertTOBigDecimal(String valor) {
         try {
             // Usar Locale brasileiro para interpretar a vírgula como decimal
             NumberFormat format = java.text.NumberFormat.getNumberInstance(new Locale("pt", "BR"));

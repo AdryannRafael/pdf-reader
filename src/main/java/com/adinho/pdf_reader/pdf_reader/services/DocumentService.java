@@ -1,0 +1,101 @@
+package com.adinho.pdf_reader.pdf_reader.services;
+
+import com.adinho.pdf_reader.pdf_reader.Calculos;
+import com.adinho.pdf_reader.pdf_reader.DocxWriter;
+import com.adinho.pdf_reader.pdf_reader.ExtracaoCalulos;
+import com.adinho.pdf_reader.pdf_reader.MoneyFormatter;
+import jakarta.xml.bind.JAXBException;
+import org.docx4j.openpackaging.exceptions.Docx4JException;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.file.Path;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+
+@Service
+public class DocumentService {
+
+    private final BigDecimal honorariosSucumbencial = BigDecimal.valueOf(10).divide(BigDecimal.valueOf(100));
+    private final BigDecimal honorariosContratual = BigDecimal.valueOf(20).divide(BigDecimal.valueOf(100));
+
+    public DocumentService() {
+    }
+
+    public ExtracaoCalulos calcular(String numeroProcesso, MultipartFile[] files) {
+
+        /*  Tudo que deve ser passado o replace
+        *   #numeroProcesso
+        *   #nome(index)
+        *   #cpf(index)
+        *   #restituido(index)
+        *   #juros(index)
+        *   #total(index)
+        *   #honorarios(index)
+        *   #valorTotal
+        *   #honorariosTotal
+        * */
+        try {
+            DocxWriter docxWriter = new DocxWriter(Path.of("modelo.docx"), Path.of(numeroProcesso+"-output.docx"));
+            ExtracaoCalulos extracaoCalulos = this.extrairValoresTotais(files, docxWriter);
+
+
+            BigDecimal honorariosTotal = extracaoCalulos.getTotal().multiply(honorariosSucumbencial);
+            /**/
+            docxWriter.write("#numeroProcesso", numeroProcesso);
+            docxWriter.write("#valorTotal", MoneyFormatter.formatSemSimbolo(extracaoCalulos.getTotal()));
+            docxWriter.write("#honorariosTotal", MoneyFormatter.formatSemSimbolo(honorariosTotal));
+
+            docxWriter.save();
+            return extracaoCalulos;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private ExtracaoCalulos extrairValoresTotais(MultipartFile[] files, DocxWriter docxWriter) throws JAXBException, IOException, Docx4JException, ParseException {
+        ExtracaoCalulos ex = new ExtracaoCalulos();
+        /*  Tudo que deve ser passado o replace aqui enquanto percorre
+         *   #nome(index)
+         *   #cpf(index)
+         *   #restituido(index)
+         *   #juros(index)
+         *   #total(index)
+         *   #honorarios(index)
+         * */
+        List<ExtracaoCalulos> calculosEncontrados = Arrays.stream(files).map(Calculos::extrair).toList();
+        for (int i = 1; i<= calculosEncontrados.size(); i++){
+            ExtracaoCalulos calculo = calculosEncontrados.get(i-1);
+            /*Calculando valores*/
+            BigDecimal juros = calculo.getJuros().add(calculo.getSelic());
+            BigDecimal honorarios = calculo.getTotal().multiply(honorariosContratual);
+
+            /*Formatando valores*/
+            String restituicaoFormatodo = MoneyFormatter.formatSemSimbolo(calculo.getPrincipal());
+            String jurosFormatado = MoneyFormatter.formatSemSimbolo(juros);
+            String totalFormatodo = MoneyFormatter.formatSemSimbolo(calculo.getTotal());
+            String honorariosFormatodo = MoneyFormatter.formatSemSimbolo(honorarios);
+
+            /*Escrevendo no docx*/
+            docxWriter.write("#nome"+i, calculo.getNome());
+            docxWriter.write("#cpf"+i, calculo.getCpf());
+            docxWriter.write("#restituido"+i, restituicaoFormatodo);
+            docxWriter.write("#juros"+i, jurosFormatado);
+            docxWriter.write("#total"+i, totalFormatodo);
+            docxWriter.write("#honorarios"+i, honorariosFormatodo);
+
+            System.out.println(calculo);
+            /*Somando valores para o total geral*/
+            ex.setPrincipal(ex.getPrincipal().add(calculo.getPrincipal()));
+            ex.setJuros(ex.getJuros().add(calculo.getJuros()));
+            ex.setSelic(ex.getSelic().add(calculo.getSelic()));
+            ex.setTotal(ex.getTotal().add(calculo.getTotal()));
+        }
+        return ex;
+    }
+}
