@@ -9,6 +9,7 @@ import org.docx4j.openpackaging.parts.WordprocessingML.MainDocumentPart;
 import org.docx4j.wml.Text;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -53,8 +54,16 @@ public class DocxWriter {
         }
     }
 
+    public ByteArrayOutputStream getOutputSteam() throws IOException, Docx4JException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        docx.save(out);
+        return out;
+    }
 
     public void save() throws IOException, Docx4JException {
+        if(this.outputPath == null) {
+            throw new IllegalStateException("Output path is not set");
+        }
         if (Files.notExists(this.outputPath)) {
             Files.createFile(this.outputPath);
         }

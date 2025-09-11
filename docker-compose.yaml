@@ -1,0 +1,13 @@
+services:
+  server:
+    build: .
+    container_name: docx-server
+
+    ports:
+      - 8080:8080
+    networks:
+      - auth-server_default
+
+networks:
+  auth-server_default:
+    external: true

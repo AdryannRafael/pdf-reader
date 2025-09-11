@@ -9,14 +9,14 @@ import org.docx4j.openpackaging.exceptions.Docx4JException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.nio.file.Path;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 
 @Service
 public class DocumentService {
@@ -27,21 +27,22 @@ public class DocumentService {
     public DocumentService() {
     }
 
-    public ExtracaoCalulos calcular(String numeroProcesso, MultipartFile[] files) {
+    public ByteArrayOutputStream calcular(MultipartFile modelo, String numeroProcesso, List<MultipartFile> files) {
 
         /*  Tudo que deve ser passado o replace
-        *   #numeroProcesso
-        *   #nome(index)
-        *   #cpf(index)
-        *   #restituido(index)
-        *   #juros(index)
-        *   #total(index)
-        *   #honorarios(index)
-        *   #valorTotal
-        *   #honorariosTotal
-        * */
+         *   #numeroProcesso
+         *   #nome(index)
+         *   #cpf(index)
+         *   #restituido(index)
+         *   #juros(index)
+         *   #total(index)
+         *   #honorarios(index)
+         *   #valorTotal
+         *   #honorariosTotal
+         * */
         try {
-            DocxWriter docxWriter = new DocxWriter(Path.of("modelo.docx"), Path.of(numeroProcesso+"-output.docx"));
+
+            DocxWriter docxWriter = new DocxWriter(modelo, null);
             ExtracaoCalulos extracaoCalulos = this.extrairValoresTotais(files, docxWriter);
 
 
@@ -51,14 +52,13 @@ public class DocumentService {
             docxWriter.write("#valorTotal", MoneyFormatter.formatSemSimbolo(extracaoCalulos.getTotal()));
             docxWriter.write("#honorariosTotal", MoneyFormatter.formatSemSimbolo(honorariosTotal));
 
-            docxWriter.save();
-            return extracaoCalulos;
+            return docxWriter.getOutputSteam();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private ExtracaoCalulos extrairValoresTotais(MultipartFile[] files, DocxWriter docxWriter) throws JAXBException, IOException, Docx4JException, ParseException {
+    private ExtracaoCalulos extrairValoresTotais(List<MultipartFile> files, DocxWriter docxWriter) throws JAXBException, IOException, Docx4JException, ParseException {
         ExtracaoCalulos ex = new ExtracaoCalulos();
         /*  Tudo que deve ser passado o replace aqui enquanto percorre
          *   #nome(index)
@@ -68,9 +68,9 @@ public class DocumentService {
          *   #total(index)
          *   #honorarios(index)
          * */
-        List<ExtracaoCalulos> calculosEncontrados = Arrays.stream(files).map(Calculos::extrair).toList();
-        for (int i = 1; i<= calculosEncontrados.size(); i++){
-            ExtracaoCalulos calculo = calculosEncontrados.get(i-1);
+        List<ExtracaoCalulos> calculosEncontrados = files.stream().map(Calculos::extrair).toList();
+        for (int i = 1; i <= calculosEncontrados.size(); i++) {
+            ExtracaoCalulos calculo = calculosEncontrados.get(i - 1);
             /*Calculando valores*/
             BigDecimal juros = calculo.getJuros().add(calculo.getSelic());
             BigDecimal honorarios = calculo.getTotal().multiply(honorariosContratual);
@@ -82,12 +82,12 @@ public class DocumentService {
             String honorariosFormatodo = MoneyFormatter.formatSemSimbolo(honorarios);
 
             /*Escrevendo no docx*/
-            docxWriter.write("#nome"+i, calculo.getNome());
-            docxWriter.write("#cpf"+i, calculo.getCpf());
-            docxWriter.write("#restituido"+i, restituicaoFormatodo);
-            docxWriter.write("#juros"+i, jurosFormatado);
-            docxWriter.write("#total"+i, totalFormatodo);
-            docxWriter.write("#honorarios"+i, honorariosFormatodo);
+            docxWriter.write("#nome" + i, calculo.getNome());
+            docxWriter.write("#cpf" + i, calculo.getCpf());
+            docxWriter.write("#restituido" + i, restituicaoFormatodo);
+            docxWriter.write("#juros" + i, jurosFormatado);
+            docxWriter.write("#total" + i, totalFormatodo);
+            docxWriter.write("#honorarios" + i, honorariosFormatodo);
 
             System.out.println(calculo);
             /*Somando valores para o total geral*/
