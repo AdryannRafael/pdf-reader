@@ -1,4 +1,4 @@
-FROM bitnami/java:21.0.5-11 as BUILD
+FROM alpine/java:21-jdk as BUILD
 
 WORKDIR /app
 COPY . .
