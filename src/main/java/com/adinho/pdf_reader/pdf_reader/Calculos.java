@@ -36,13 +36,21 @@ public class Calculos {
 //        linhas
         /*3 - 4 - 8 - 9 - 10 - 11
          *2 - 3 - 7 - 8 - 9 - 10*/
-        Tbl tabela = (Tbl) content.get(0).getValue();
-        Tr linhaNome = (Tr) tabela.getContent().get(2);
-        Tr linhaCpf = (Tr) tabela.getContent().get(3);
-        Tr linhaPrincipal = (Tr) tabela.getContent().get(7);
-        Tr linhaJuros = (Tr) tabela.getContent().get(8);
-        Tr linhaSelic = (Tr) tabela.getContent().get(9);
-        Tr linhaTotal = (Tr) tabela.getContent().get(10);
+        /*tabelas*/
+        Tbl tabelaComNome = (Tbl) content.get(1).getValue();
+        Tbl tabelaComTotalizadores = (Tbl) content.get(3).getValue();
+
+
+//        Tbl tabela = (Tbl) content.get(0).getValue();
+        Tr linhaNome = (Tr) tabelaComNome.getContent().get(0);
+        Tr linhaCpf = (Tr) tabelaComNome.getContent().get(1);
+
+
+        Tr linhaPrincipal = (Tr) tabelaComTotalizadores.getContent().get(0);
+        Tr linhaJuros = (Tr) tabelaComTotalizadores.getContent().get(1);
+        Tr linhaSelic = (Tr) tabelaComTotalizadores.getContent().get(2);
+        Tr linhaTotal = (Tr) tabelaComTotalizadores.getContent().get(3);
+
         List<Tr> colunasComAsInfoQueQuero = List.of(linhaNome, linhaCpf, linhaPrincipal, linhaJuros, linhaSelic, linhaTotal);
         List<String> values = colunasComAsInfoQueQuero.stream().map(el -> {
                     JAXBElement cordenada;
@@ -50,7 +58,7 @@ public class Calculos {
                         cordenada = (JAXBElement) el.getContent().get(1);
                         return extrairValorDaCordenadaString(cordenada);
                     } else {
-                        cordenada = (JAXBElement) el.getContent().get(7);
+                        cordenada = (JAXBElement) el.getContent().get(2);
                         return extrairValorDaCordenadaNumero(cordenada);
                     }
 
@@ -63,7 +71,7 @@ public class Calculos {
         }
 
         String nome = values.get(0).trim();
-        String cpf = values.get(1).trim();
+        String cpf = values.get(1).trim().replaceAll("[^0-9]", "");
         BigDecimal principal = convertTOBigDecimal(values.get(2).trim());
         BigDecimal juros = convertTOBigDecimal(values.get(3).trim());
         BigDecimal selic = convertTOBigDecimal(values.get(4).trim());

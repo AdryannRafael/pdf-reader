@@ -83,7 +83,9 @@ public class DocumentService {
 
             /*Escrevendo no docx*/
             docxWriter.write("#nome" + i, calculo.getNome());
-            docxWriter.write("#cpf" + i, calculo.getCpf());
+            String cpf = calculo.getCpf();
+
+            docxWriter.write("#cpf" + i, cpf);
             docxWriter.write("#restituido" + i, restituicaoFormatodo);
             docxWriter.write("#juros" + i, jurosFormatado);
             docxWriter.write("#total" + i, totalFormatodo);
