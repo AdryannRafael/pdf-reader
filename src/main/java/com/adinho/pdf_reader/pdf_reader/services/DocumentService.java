@@ -83,7 +83,7 @@ public class DocumentService {
 
             /*Escrevendo no docx*/
             docxWriter.write("#nome" + i, calculo.getNome());
-            String cpf = calculo.getCpf();
+            String cpf = formatCPF(calculo.getCpf());
 
             docxWriter.write("#cpf" + i, cpf);
             docxWriter.write("#restituido" + i, restituicaoFormatodo);
@@ -99,5 +99,17 @@ public class DocumentService {
             ex.setTotal(ex.getTotal().add(calculo.getTotal()));
         }
         return ex;
+    }
+
+    static String formatCPF(String cpf) {
+        if (cpf == null) return "";
+        // remove tudo que não for número
+        cpf = cpf.replaceAll("[^0-9]", "");
+
+        // garante que tenha 11 dígitos
+        if (cpf.length() != 11) return cpf;
+
+        return cpf.replaceFirst("(\\d{3})(\\d{3})(\\d{3})(\\d{2})",
+                "$1.$2.$3-$4");
     }
 }
