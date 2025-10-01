@@ -30,7 +30,7 @@ public class ExecutorController {
     ) {
         ByteArrayOutputStream stream = documentService.calcular(modelo, numeroProcesso, file);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=%s.docx".formatted(numeroProcesso))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=%s.docx".formatted("Cálculos dos autores"))
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(stream.toByteArray());
     }
