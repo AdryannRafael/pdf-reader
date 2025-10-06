@@ -37,6 +37,78 @@ public class Calculos {
         /*3 - 4 - 8 - 9 - 10 - 11
          *2 - 3 - 7 - 8 - 9 - 10*/
         /*tabelas*/
+        if(content.size() == 1) return extracaoUnicaTabela(content);
+
+        return extracaoMultiplasTabelas(content);
+    }
+    private static ExtracaoCalulos extracaoUnicaTabela(List<JAXBElement> content){
+        Tbl tabela = (Tbl) content.get(0).getValue();
+        Tr linhaNome = (Tr) tabela.getContent().get(2);
+        Tr linhaCpf = (Tr) tabela.getContent().get(3);
+        Tr linhaPrincipal = (Tr) tabela.getContent().get(6);
+        Tr linhaJuros = (Tr) tabela.getContent().get(7);
+        Tr linhaSelic = (Tr) tabela.getContent().get(8);
+        Tr linhaTotal = (Tr) tabela.getContent().get(9);
+        List<Tr> colunasComAsInfoQueQuero = List.of(linhaNome, linhaCpf, linhaPrincipal, linhaJuros, linhaSelic, linhaTotal);
+        List<String> values = colunasComAsInfoQueQuero.stream().map(el -> {
+                    JAXBElement cordenada;
+                    if (el == linhaNome || el == linhaCpf) {
+                        cordenada = (JAXBElement) el.getContent().get(1);
+                        return extrairValorDaCordenadaString(cordenada, el.getClass().getName());
+                    } else {
+                        cordenada = (JAXBElement) el.getContent().get(7);
+                        return extrairValorDaCordenadaNumero(cordenada, el.getClass().getName());
+                    }
+
+                })
+                .toList();
+
+
+        if (values == null || values.size() < keys.size()) {
+            throw new RuntimeException("Nao foi possivel encontrar os valores no documento.");
+        }
+
+        String nome = values.get(0).trim();
+        String cpf = values.get(1).trim();
+        BigDecimal principal = convertTOBigDecimal(values.get(2).trim());
+        BigDecimal juros = convertTOBigDecimal(values.get(3).trim());
+        BigDecimal selic = convertTOBigDecimal(values.get(4).trim());
+        BigDecimal total = convertTOBigDecimal(values.get(5).trim());
+
+        return new ExtracaoCalulos(nome, cpf, principal, juros, selic, total);
+    }
+    private static String extrairValorDaCordenadaNumero(JAXBElement cordenada, String tipo){
+        Tc colContent = (Tc) cordenada.getValue();
+        if (!colContent.getContent().isEmpty()) {
+            P paragrafo = (P) colContent.getContent().get(0);
+            if (!paragrafo.getContent().isEmpty()) {
+                R r = (R) paragrafo.getContent().get(0);
+                if (!r.getContent().isEmpty()) {
+                    JAXBElement elDentroLinha = (JAXBElement) r.getContent().get(0);
+                    if (Text.class.isAssignableFrom(elDentroLinha.getValue().getClass())) {
+                        Text t = (Text) elDentroLinha.getValue();
+                        return t.getValue();
+                    }
+                    return null;
+                }
+                return null;
+            }
+            return null;
+        }
+        return null;
+    }
+    private static String extrairValorDaCordenadaString(JAXBElement cordenada, String tipo){
+        Tc colContent = (Tc) cordenada.getValue();
+        if (!colContent.getContent().isEmpty()) {
+            P paragrafo = (P) colContent.getContent().get(0);
+            String rsidRPr = paragrafo.toString();
+            return rsidRPr;
+        }
+        return null;
+    }
+    /**/
+
+    private static ExtracaoCalulos extracaoMultiplasTabelas(List<JAXBElement> content) {
         Tbl tabelaComNome = (Tbl) content.get(1).getValue();
         Tbl tabelaComTotalizadores = (Tbl) content.get(3).getValue();
 

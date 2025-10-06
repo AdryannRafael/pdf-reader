@@ -11,12 +11,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.nio.file.Path;
 import java.text.ParseException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class DocumentService {
@@ -68,7 +67,20 @@ public class DocumentService {
          *   #total(index)
          *   #honorarios(index)
          * */
-        List<ExtracaoCalulos> calculosEncontrados = files.stream().map(Calculos::extrair).toList();
+        AtomicInteger v = new AtomicInteger();
+        List<ExtracaoCalulos> calculosEncontrados = new ArrayList<>();
+        try {
+
+
+            calculosEncontrados = files.stream().map(e -> {
+                ExtracaoCalulos extrair = Calculos.extrair(e);
+                v.getAndIncrement();
+                return extrair;
+            }).toList();
+        } catch (Exception e) {
+            System.out.println("Erro ao processar arquivos: " + v.get());
+            throw e;
+        }
         for (int i = 1; i <= calculosEncontrados.size(); i++) {
             ExtracaoCalulos calculo = calculosEncontrados.get(i - 1);
             /*Calculando valores*/
