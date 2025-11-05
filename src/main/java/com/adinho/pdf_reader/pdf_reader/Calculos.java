@@ -45,10 +45,20 @@ public class Calculos {
         Tbl tabela = (Tbl) content.get(0).getValue();
         Tr linhaNome = (Tr) tabela.getContent().get(2);
         Tr linhaCpf = (Tr) tabela.getContent().get(3);
-        Tr linhaPrincipal = (Tr) tabela.getContent().get(6);
-        Tr linhaJuros = (Tr) tabela.getContent().get(7);
-        Tr linhaSelic = (Tr) tabela.getContent().get(8);
-        Tr linhaTotal = (Tr) tabela.getContent().get(9);
+        int linhaValorPrincipal = 6;
+        int linhaValorJuros = 7;
+        int linhaValorSelic = 8;
+        int linhaValorTotal = 9;
+        if(tabela.getContent().size() == 21 ){
+            linhaValorPrincipal++;
+            linhaValorJuros++;
+            linhaValorSelic++;
+            linhaValorTotal++;
+        }
+        Tr linhaPrincipal = (Tr) tabela.getContent().get(linhaValorPrincipal);
+        Tr linhaJuros = (Tr) tabela.getContent().get(linhaValorJuros);
+        Tr linhaSelic = (Tr) tabela.getContent().get(linhaValorSelic);
+        Tr linhaTotal = (Tr) tabela.getContent().get(linhaValorTotal);
         List<Tr> colunasComAsInfoQueQuero = List.of(linhaNome, linhaCpf, linhaPrincipal, linhaJuros, linhaSelic, linhaTotal);
         List<String> values = colunasComAsInfoQueQuero.stream().map(el -> {
                     JAXBElement cordenada;
