@@ -7,6 +7,7 @@ import org.docx4j.wml.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.text.NumberFormat;
@@ -205,6 +206,16 @@ public class Calculos {
     public static ExtracaoCalulos extrair(MultipartFile file) {
         try {
             WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(file.getInputStream());
+            return procurar(wordMLPackage);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Deu merda na extração dos dados", e);
+        }
+    }
+
+    public static ExtracaoCalulos extrair(InputStream file) {
+        try {
+            WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(file);
             return procurar(wordMLPackage);
 
         } catch (Exception e) {

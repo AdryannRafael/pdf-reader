@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,6 +25,12 @@ public class DocxWriter {
 
     public DocxWriter(MultipartFile file, Path outputPath) throws IOException, Docx4JException, JAXBException {
         this.docx = WordprocessingMLPackage.load(file.getInputStream());
+        this.nodes = pegarNodes("//w:t");
+        this.outputPath = outputPath;
+    }
+
+    public DocxWriter(InputStream file, Path outputPath) throws IOException, Docx4JException, JAXBException {
+        this.docx = WordprocessingMLPackage.load(file);
         this.nodes = pegarNodes("//w:t");
         this.outputPath = outputPath;
     }
