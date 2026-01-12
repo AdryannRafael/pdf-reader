@@ -8,6 +8,8 @@ public enum ApiRequestSpecificitySystemErrors implements SpecificityError {
     MUST_REQUEST("429"),
     UNAVAILABLE("503"),
     NOT_FOUND("404"),
+    MEMORY_INSUFICIENTE("901"),
+    UNKNOW("901"),
 //    BAD_REQUEST("400"),
 //    UNAUTHORIZED("401"),
 //    FORBIDDEN("403")

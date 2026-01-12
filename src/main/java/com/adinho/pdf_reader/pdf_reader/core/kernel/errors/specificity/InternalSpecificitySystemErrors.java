@@ -7,7 +7,7 @@ public enum InternalSpecificitySystemErrors implements SpecificityError {
     DATABASE("001"),
     INTERRUPTED_THREAD("002"),
     OTHER_ERROR("003"),
-    IO("004"),
+    IO("004")
     ;
 
     private final String value;

@@ -36,8 +36,7 @@ public class GenerateDocumentExecutor {
         catch (Exception error){
             /*Aqui ele trata exeptions conhecidas pelo ErrorException */
             SystemError genericError = new SystemError(NatureErrors.INTERNAL, InternalSpecificitySystemErrors.OTHER_ERROR);
-            String erro = "ERRO NA GERAÇÃO DO DOCUMENTO,CODIGO: {}, MENSAGEM: {}, CAUSE {}, codigo".formatted(genericError.getErrorCode(), error.getMessage(), error.getCause());
-            log.error(erro);
+            log.error("ERRO NA GERAÇÃO DO DOCUMENTO,CODIGO: {}, MENSAGEM: {}, CAUSE {}, codigo".formatted(genericError.getErrorCode(), error.getMessage(), error.getCause()));
             manager.executeStep(p -> {
                 p.failed(genericError, error.getMessage());
                 return p;
